@@ -354,7 +354,7 @@ export function InvoicePreview({
                     alt="Authorized Studio Signature"
                     referrerPolicy="no-referrer"
                     onError={() => setSignatureError(true)}
-                    className="w-36 h-14 object-cover object-center scale-[2.6] mix-blend-multiply contrast-125"
+                    className="max-h-14 w-auto object-contain"
                   />
                 )}
               </div>
