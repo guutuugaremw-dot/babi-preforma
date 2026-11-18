@@ -1,0 +1,525 @@
+{
+  "entities": {
+    "StudioSettings": {
+      "title": "StudioSettings",
+      "description": "Company branding, contact, banking, and default tax/prepayment configuration for a user's studio.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the studio owner.",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "brandName": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "tagline": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "location": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "messagingNote": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "bankLabel": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "bankAccount": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "mobileMoneyLabel": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "mobileMoneyAccount": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "executionLocation": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "warrantyNote": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "footerNote": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "defaultCurrency": {
+          "type": "string",
+          "enum": ["ETB", "USD", "EUR", "GBP"]
+        },
+        "defaultTaxRate": {
+          "type": "number"
+        },
+        "defaultPrepaymentPercent": {
+          "type": "number"
+        },
+        "invoicePrefix": {
+          "type": "string",
+          "maxLength": 16,
+          "pattern": "^[A-Z0-9\\-]+$"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "brandName",
+        "defaultCurrency",
+        "defaultTaxRate",
+        "defaultPrepaymentPercent",
+        "invoicePrefix",
+        "updatedAt"
+      ]
+    },
+    "ProformaInvoice": {
+      "title": "ProformaInvoice",
+      "description": "Pro forma invoice header, client details, discount/tax rules, payment terms, and computed summary totals.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "referenceNumber": {
+          "type": "string",
+          "maxLength": 40,
+          "pattern": "^[A-Z0-9\\-]+$"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["draft", "sent", "approved", "archived"]
+        },
+        "issueDate": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "validUntil": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "clientName": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "clientPhone": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "clientAddress": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "projectTitle": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "currency": {
+          "type": "string",
+          "enum": ["ETB", "USD", "EUR", "GBP"]
+        },
+        "discountType": {
+          "type": "string",
+          "enum": ["percent", "fixed"]
+        },
+        "discountValue": {
+          "type": "number"
+        },
+        "taxRate": {
+          "type": "number"
+        },
+        "prepaymentPercent": {
+          "type": "number"
+        },
+        "paymentTerms": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "subtotal": {
+          "type": "number"
+        },
+        "discountAmount": {
+          "type": "number"
+        },
+        "taxAmount": {
+          "type": "number"
+        },
+        "grandTotal": {
+          "type": "number"
+        },
+        "itemCount": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "referenceNumber",
+        "status",
+        "issueDate",
+        "validUntil",
+        "clientName",
+        "currency",
+        "discountType",
+        "discountValue",
+        "taxRate",
+        "prepaymentPercent",
+        "subtotal",
+        "discountAmount",
+        "taxAmount",
+        "grandTotal",
+        "itemCount",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "InvoiceLineItem": {
+      "title": "InvoiceLineItem",
+      "description": "Individual pro forma line item with dimension or unit pricing and up to 10 bounded add-on labels.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "invoiceId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sortOrder": {
+          "type": "integer"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "specification": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "pricingMode": {
+          "type": "string",
+          "enum": ["dimension", "unit"]
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "quantity": {
+          "type": "number"
+        },
+        "unitLabel": {
+          "type": "string",
+          "maxLength": 24
+        },
+        "unitPrice": {
+          "type": "number"
+        },
+        "addonNames": {
+          "type": "array",
+          "description": "Bounded list of up to 10 add-on upgrade descriptions."
+        },
+        "addonPrices": {
+          "type": "array",
+          "description": "Bounded list of up to 10 add-on upgrade prices matching addonNames."
+        },
+        "addonsTotal": {
+          "type": "number"
+        },
+        "lineTotal": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "invoiceId",
+        "sortOrder",
+        "title",
+        "pricingMode",
+        "quantity",
+        "unitLabel",
+        "unitPrice",
+        "addonNames",
+        "addonPrices",
+        "addonsTotal",
+        "lineTotal",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CatalogMaterial": {
+      "title": "CatalogMaterial",
+      "description": "Saved studio material or fabrication service rate preset.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "specification": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "pricingMode": {
+          "type": "string",
+          "enum": ["dimension", "unit"]
+        },
+        "defaultWidth": {
+          "type": "number"
+        },
+        "defaultHeight": {
+          "type": "number"
+        },
+        "unitLabel": {
+          "type": "string",
+          "maxLength": 24
+        },
+        "unitPrice": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "title",
+        "pricingMode",
+        "unitLabel",
+        "unitPrice",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PublicStudioProfile": {
+      "title": "PublicStudioProfile",
+      "description": "Publicly exposed studio storefront branding and invoicing defaults for the client-facing portal.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "brandName": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "tagline": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "location": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "messagingNote": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "bankLabel": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "bankAccount": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "mobileMoneyLabel": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "mobileMoneyAccount": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "executionLocation": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "warrantyNote": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "footerNote": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "defaultCurrency": {
+          "type": "string",
+          "enum": ["ETB", "USD", "EUR", "GBP"]
+        },
+        "defaultTaxRate": {
+          "type": "number"
+        },
+        "defaultPrepaymentPercent": {
+          "type": "number"
+        },
+        "invoicePrefix": {
+          "type": "string",
+          "maxLength": 16,
+          "pattern": "^[A-Z0-9\\-]+$"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "brandName",
+        "defaultCurrency",
+        "defaultTaxRate",
+        "defaultPrepaymentPercent",
+        "invoicePrefix",
+        "updatedAt"
+      ]
+    },
+    "PublicCatalogMaterial": {
+      "title": "PublicCatalogMaterial",
+      "description": "Publicly exposed material and fabrication item for client self-service selection.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "specification": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "pricingMode": {
+          "type": "string",
+          "enum": ["dimension", "unit"]
+        },
+        "defaultWidth": {
+          "type": "number"
+        },
+        "defaultHeight": {
+          "type": "number"
+        },
+        "unitLabel": {
+          "type": "string",
+          "maxLength": 24
+        },
+        "unitPrice": {
+          "type": "number"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "title",
+        "pricingMode",
+        "unitLabel",
+        "unitPrice",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/settings/{settingId}": {
+      "schema": {
+        "$ref": "#/entities/StudioSettings"
+      },
+      "description": "Private studio branding, banking, and calculation defaults owned by the user."
+    },
+    "/users/{userId}/invoices/{invoiceId}": {
+      "schema": {
+        "$ref": "#/entities/ProformaInvoice"
+      },
+      "description": "Pro forma invoices owned by the user."
+    },
+    "/users/{userId}/invoices/{invoiceId}/items/{itemId}": {
+      "schema": {
+        "$ref": "#/entities/InvoiceLineItem"
+      },
+      "description": "Line items belonging to a specific pro forma invoice."
+    },
+    "/users/{userId}/catalog/{catalogId}": {
+      "schema": {
+        "$ref": "#/entities/CatalogMaterial"
+      },
+      "description": "Saved material and fabrication rate presets owned by the user."
+    },
+    "/public_studios/{studioId}": {
+      "schema": {
+        "$ref": "#/entities/PublicStudioProfile"
+      },
+      "description": "Publicly readable studio branding and defaults for client-facing pro forma portal."
+    },
+    "/public_studios/{studioId}/catalog/{catalogId}": {
+      "schema": {
+        "$ref": "#/entities/PublicCatalogMaterial"
+      },
+      "description": "Publicly readable studio catalog items exposed to the client-facing portal."
+    }
+  }
+}

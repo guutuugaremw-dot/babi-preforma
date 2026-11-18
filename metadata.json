@@ -1,0 +1,8 @@
+{
+  "name": "Babi Studio Pro Forma",
+  "description": "Real-time pro forma invoice calculation engine, AI scope extraction, and PDF document studio for interior design and custom fabrication.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

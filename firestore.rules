@@ -1,0 +1,360 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Reusable Primitive Helpers ---
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+    }
+
+    function isVerifiedOwner(userId) {
+      return isVerified() && isValidId(userId) && request.auth.uid == userId;
+    }
+
+    function isValidString(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+
+    function isValidNumber(val, minVal, maxVal) {
+      return (val is int || val is float) && val >= minVal && val <= maxVal;
+    }
+
+    function isValidCurrency(val) {
+      return val in ['ETB', 'USD', 'EUR', 'GBP'];
+    }
+
+    // --- Validation Blueprints ---
+    function isValidStudioSettings(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'brandName', 'defaultCurrency', 'defaultTaxRate',
+          'defaultPrepaymentPercent', 'invoicePrefix', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'brandName', 'tagline', 'location', 'phone',
+          'messagingNote', 'email', 'bankLabel', 'bankAccount',
+          'mobileMoneyLabel', 'mobileMoneyAccount', 'executionLocation',
+          'warrantyNote', 'footerNote', 'defaultCurrency', 'defaultTaxRate',
+          'defaultPrepaymentPercent', 'invoicePrefix', 'updatedAt'
+        ])
+        && data.ownerId == userId
+        && isValidId(data.ownerId)
+        && isValidString(data.brandName, 1, 100)
+        && (!('tagline' in data) || isValidString(data.tagline, 0, 120))
+        && (!('location' in data) || isValidString(data.location, 0, 160))
+        && (!('phone' in data) || isValidString(data.phone, 0, 40))
+        && (!('messagingNote' in data) || isValidString(data.messagingNote, 0, 80))
+        && (!('email' in data) || isValidString(data.email, 0, 120))
+        && (!('bankLabel' in data) || isValidString(data.bankLabel, 0, 120))
+        && (!('bankAccount' in data) || isValidString(data.bankAccount, 0, 80))
+        && (!('mobileMoneyLabel' in data) || isValidString(data.mobileMoneyLabel, 0, 80))
+        && (!('mobileMoneyAccount' in data) || isValidString(data.mobileMoneyAccount, 0, 120))
+        && (!('executionLocation' in data) || isValidString(data.executionLocation, 0, 160))
+        && (!('warrantyNote' in data) || isValidString(data.warrantyNote, 0, 200))
+        && (!('footerNote' in data) || isValidString(data.footerNote, 0, 200))
+        && isValidCurrency(data.defaultCurrency)
+        && isValidNumber(data.defaultTaxRate, 0, 100)
+        && isValidNumber(data.defaultPrepaymentPercent, 0, 100)
+        && isValidString(data.invoicePrefix, 1, 16)
+        && data.invoicePrefix.matches('^[A-Z0-9\\-]+$')
+        && data.updatedAt == request.time;
+    }
+
+    function isValidProformaInvoice(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'referenceNumber', 'status', 'issueDate', 'validUntil',
+          'clientName', 'currency', 'discountType', 'discountValue',
+          'taxRate', 'prepaymentPercent', 'subtotal', 'discountAmount',
+          'taxAmount', 'grandTotal', 'itemCount', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'referenceNumber', 'status', 'issueDate', 'validUntil',
+          'clientName', 'clientPhone', 'clientAddress', 'projectTitle',
+          'currency', 'discountType', 'discountValue', 'taxRate',
+          'prepaymentPercent', 'paymentTerms', 'subtotal', 'discountAmount',
+          'taxAmount', 'grandTotal', 'itemCount', 'createdAt', 'updatedAt'
+        ])
+        && data.ownerId == userId
+        && isValidId(data.ownerId)
+        && isValidString(data.referenceNumber, 3, 40)
+        && data.referenceNumber.matches('^[A-Z0-9\\-]+$')
+        && data.status in ['draft', 'sent', 'approved', 'archived']
+        && isValidString(data.issueDate, 4, 32)
+        && isValidString(data.validUntil, 4, 32)
+        && isValidString(data.clientName, 1, 120)
+        && (!('clientPhone' in data) || isValidString(data.clientPhone, 0, 40))
+        && (!('clientAddress' in data) || isValidString(data.clientAddress, 0, 200))
+        && (!('projectTitle' in data) || isValidString(data.projectTitle, 0, 160))
+        && isValidCurrency(data.currency)
+        && data.discountType in ['percent', 'fixed']
+        && isValidNumber(data.discountValue, 0, 1000000000)
+        && isValidNumber(data.taxRate, 0, 100)
+        && isValidNumber(data.prepaymentPercent, 0, 100)
+        && (!('paymentTerms' in data) || isValidString(data.paymentTerms, 0, 1000))
+        && isValidNumber(data.subtotal, 0, 10000000000)
+        && isValidNumber(data.discountAmount, 0, 10000000000)
+        && isValidNumber(data.taxAmount, 0, 10000000000)
+        && isValidNumber(data.grandTotal, 0, 10000000000)
+        && data.itemCount is int
+        && data.itemCount >= 0
+        && data.itemCount <= 500
+        && data.createdAt is timestamp
+        && data.updatedAt == request.time;
+    }
+
+    function isValidInvoiceLineItem(data, userId, invoiceId) {
+      return data.keys().hasAll([
+          'ownerId', 'invoiceId', 'sortOrder', 'title', 'pricingMode',
+          'quantity', 'unitLabel', 'unitPrice', 'addonNames', 'addonPrices',
+          'addonsTotal', 'lineTotal', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'invoiceId', 'sortOrder', 'title', 'specification',
+          'pricingMode', 'width', 'height', 'quantity', 'unitLabel',
+          'unitPrice', 'addonNames', 'addonPrices', 'addonsTotal',
+          'lineTotal', 'createdAt', 'updatedAt'
+        ])
+        && data.ownerId == userId
+        && isValidId(data.ownerId)
+        && data.invoiceId == invoiceId
+        && isValidId(data.invoiceId)
+        && data.sortOrder is int
+        && data.sortOrder >= 0
+        && data.sortOrder <= 1000
+        && isValidString(data.title, 1, 160)
+        && (!('specification' in data) || isValidString(data.specification, 0, 160))
+        && data.pricingMode in ['dimension', 'unit']
+        && (!('width' in data) || isValidNumber(data.width, 0, 10000))
+        && (!('height' in data) || isValidNumber(data.height, 0, 10000))
+        && isValidNumber(data.quantity, 0, 1000000)
+        && isValidString(data.unitLabel, 1, 24)
+        && isValidNumber(data.unitPrice, 0, 1000000000)
+        && data.addonNames is list
+        && data.addonNames.size() <= 10
+        && (data.addonNames.size() == 0 || data.addonNames[0] is string)
+        && data.addonPrices is list
+        && data.addonPrices.size() <= 10
+        && data.addonPrices.size() == data.addonNames.size()
+        && (data.addonPrices.size() == 0 || (data.addonPrices[0] is int || data.addonPrices[0] is float))
+        && isValidNumber(data.addonsTotal, 0, 1000000000)
+        && isValidNumber(data.lineTotal, 0, 10000000000)
+        && data.createdAt is timestamp
+        && data.updatedAt == request.time;
+    }
+
+    function isValidCatalogMaterial(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'title', 'pricingMode', 'unitLabel',
+          'unitPrice', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'title', 'specification', 'pricingMode',
+          'defaultWidth', 'defaultHeight', 'unitLabel', 'unitPrice',
+          'createdAt', 'updatedAt'
+        ])
+        && data.ownerId == userId
+        && isValidId(data.ownerId)
+        && isValidString(data.title, 1, 160)
+        && (!('specification' in data) || isValidString(data.specification, 0, 160))
+        && data.pricingMode in ['dimension', 'unit']
+        && (!('defaultWidth' in data) || isValidNumber(data.defaultWidth, 0, 10000))
+        && (!('defaultHeight' in data) || isValidNumber(data.defaultHeight, 0, 10000))
+        && isValidString(data.unitLabel, 1, 24)
+        && isValidNumber(data.unitPrice, 0, 1000000000)
+        && data.createdAt is timestamp
+        && data.updatedAt == request.time;
+    }
+
+    function isValidPublicCatalogMaterial(data, studioId) {
+      return data.keys().hasAll([
+          'ownerId', 'title', 'pricingMode', 'unitLabel',
+          'unitPrice', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'title', 'specification', 'pricingMode',
+          'defaultWidth', 'defaultHeight', 'unitLabel', 'unitPrice',
+          'updatedAt'
+        ])
+        && data.ownerId == studioId
+        && isValidId(data.ownerId)
+        && isValidString(data.title, 1, 160)
+        && (!('specification' in data) || isValidString(data.specification, 0, 160))
+        && data.pricingMode in ['dimension', 'unit']
+        && (!('defaultWidth' in data) || isValidNumber(data.defaultWidth, 0, 10000))
+        && (!('defaultHeight' in data) || isValidNumber(data.defaultHeight, 0, 10000))
+        && isValidString(data.unitLabel, 1, 24)
+        && isValidNumber(data.unitPrice, 0, 1000000000)
+        && data.updatedAt == request.time;
+    }
+
+    // --- Collection Rules ---
+    match /users/{userId}/settings/{settingId} {
+      allow get: if isOwner(userId) && isValidId(settingId);
+      allow create: if isVerifiedOwner(userId)
+        && isValidId(settingId)
+        && isValidStudioSettings(incoming(), userId);
+      allow update: if isVerifiedOwner(userId)
+        && isValidId(settingId)
+        && isValidStudioSettings(incoming(), userId)
+        && incoming().ownerId == existing().ownerId
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'brandName', 'tagline', 'location', 'phone', 'messagingNote',
+          'email', 'bankLabel', 'bankAccount', 'mobileMoneyLabel',
+          'mobileMoneyAccount', 'executionLocation', 'warrantyNote',
+          'footerNote', 'defaultCurrency', 'defaultTaxRate',
+          'defaultPrepaymentPercent', 'invoicePrefix', 'updatedAt'
+        ]);
+      allow delete: if isVerifiedOwner(userId) && isValidId(settingId);
+    }
+
+    match /users/{userId}/invoices/{invoiceId} {
+      allow get: if isOwner(userId) && isValidId(invoiceId);
+      allow list: if isSignedIn()
+        && request.auth.uid == userId
+        && resource.data.ownerId == request.auth.uid;
+      allow create: if isVerifiedOwner(userId)
+        && isValidId(invoiceId)
+        && isValidProformaInvoice(incoming(), userId)
+        && incoming().createdAt == request.time;
+      allow update: if isVerifiedOwner(userId)
+        && isValidId(invoiceId)
+        && isValidProformaInvoice(incoming(), userId)
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && (
+          (
+            existing().status != 'archived'
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'referenceNumber', 'status', 'issueDate', 'validUntil',
+              'clientName', 'clientPhone', 'clientAddress', 'projectTitle',
+              'currency', 'discountType', 'discountValue', 'taxRate',
+              'prepaymentPercent', 'paymentTerms', 'subtotal', 'discountAmount',
+              'taxAmount', 'grandTotal', 'itemCount', 'updatedAt'
+            ])
+          )
+          ||
+          (
+            existing().status == 'archived'
+            && incoming().status == 'draft'
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+          )
+        );
+      allow delete: if isVerifiedOwner(userId) && isValidId(invoiceId);
+
+      match /items/{itemId} {
+        allow get: if isOwner(userId) && isValidId(invoiceId) && isValidId(itemId);
+        allow list: if isSignedIn()
+          && request.auth.uid == userId
+          && resource.data.ownerId == request.auth.uid
+          && resource.data.invoiceId == invoiceId;
+        allow create: if isVerifiedOwner(userId)
+          && isValidId(invoiceId)
+          && isValidId(itemId)
+          && isValidInvoiceLineItem(incoming(), userId, invoiceId)
+          && incoming().createdAt == request.time
+          && exists(/databases/$(database)/documents/users/$(userId)/invoices/$(invoiceId))
+          && get(/databases/$(database)/documents/users/$(userId)/invoices/$(invoiceId)).data.ownerId == userId
+          && get(/databases/$(database)/documents/users/$(userId)/invoices/$(invoiceId)).data.status != 'archived';
+        allow update: if isVerifiedOwner(userId)
+          && isValidId(invoiceId)
+          && isValidId(itemId)
+          && isValidInvoiceLineItem(incoming(), userId, invoiceId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().invoiceId == existing().invoiceId
+          && incoming().createdAt == existing().createdAt
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'sortOrder', 'title', 'specification', 'pricingMode', 'width',
+            'height', 'quantity', 'unitLabel', 'unitPrice', 'addonNames',
+            'addonPrices', 'addonsTotal', 'lineTotal', 'updatedAt'
+          ])
+          && get(/databases/$(database)/documents/users/$(userId)/invoices/$(invoiceId)).data.ownerId == userId
+          && get(/databases/$(database)/documents/users/$(userId)/invoices/$(invoiceId)).data.status != 'archived';
+        allow delete: if isVerifiedOwner(userId)
+          && isValidId(invoiceId)
+          && isValidId(itemId)
+          && get(/databases/$(database)/documents/users/$(userId)/invoices/$(invoiceId)).data.ownerId == userId
+          && get(/databases/$(database)/documents/users/$(userId)/invoices/$(invoiceId)).data.status != 'archived';
+      }
+    }
+
+    match /users/{userId}/catalog/{catalogId} {
+      allow get: if isOwner(userId) && isValidId(catalogId);
+      allow list: if isSignedIn()
+        && request.auth.uid == userId
+        && resource.data.ownerId == request.auth.uid;
+      allow create: if isVerifiedOwner(userId)
+        && isValidId(catalogId)
+        && isValidCatalogMaterial(incoming(), userId)
+        && incoming().createdAt == request.time;
+      allow update: if isVerifiedOwner(userId)
+        && isValidId(catalogId)
+        && isValidCatalogMaterial(incoming(), userId)
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'title', 'specification', 'pricingMode', 'defaultWidth',
+          'defaultHeight', 'unitLabel', 'unitPrice', 'updatedAt'
+        ]);
+      allow delete: if isVerifiedOwner(userId) && isValidId(catalogId);
+    }
+
+    // --- Public Client-Facing Studio Portal & Catalog ---
+    match /public_studios/{studioId} {
+      allow get: if isValidId(studioId);
+      allow create: if isVerifiedOwner(studioId)
+        && isValidStudioSettings(incoming(), studioId);
+      allow update: if isVerifiedOwner(studioId)
+        && isValidStudioSettings(incoming(), studioId)
+        && incoming().ownerId == existing().ownerId
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'brandName', 'tagline', 'location', 'phone', 'messagingNote',
+          'email', 'bankLabel', 'bankAccount', 'mobileMoneyLabel',
+          'mobileMoneyAccount', 'executionLocation', 'warrantyNote',
+          'footerNote', 'defaultCurrency', 'defaultTaxRate',
+          'defaultPrepaymentPercent', 'invoicePrefix', 'updatedAt'
+        ]);
+      allow delete: if isVerifiedOwner(studioId);
+
+      match /catalog/{catalogId} {
+        allow get: if isValidId(studioId) && isValidId(catalogId);
+        allow list: if isValidId(studioId) && resource.data.ownerId == studioId;
+        allow create: if isVerifiedOwner(studioId)
+          && isValidId(catalogId)
+          && isValidPublicCatalogMaterial(incoming(), studioId);
+        allow update: if isVerifiedOwner(studioId)
+          && isValidId(catalogId)
+          && isValidPublicCatalogMaterial(incoming(), studioId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'specification', 'pricingMode', 'defaultWidth',
+            'defaultHeight', 'unitLabel', 'unitPrice', 'updatedAt'
+          ]);
+        allow delete: if isVerifiedOwner(studioId) && isValidId(catalogId);
+      }
+    }
+  }
+}

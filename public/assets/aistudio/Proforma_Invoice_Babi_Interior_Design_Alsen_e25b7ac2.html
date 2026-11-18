@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proforma Invoice - Babi Interior Design</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8f9fa;
+      color: #2c3e50;
+      margin: 0;
+      padding: 30px;
+    }
+    .invoice-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #e2d2c3;
+      padding-bottom: 20px;
+      margin-bottom: 25px;
+    }
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .logo-img-box {
+      background-color: #21252b;
+      width: 75px;
+      height: 75px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #d4a373;
+      padding: 6px;
+      box-sizing: border-box;
+    }
+    .brand-name {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #1a1d20;
+    }
+    .brand-tagline {
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 3px;
+      color: #8c7a6b;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .contact-info {
+      text-align: right;
+      font-size: 13px;
+      color: #555;
+      line-height: 1.6;
+    }
+    .client-bar {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 14px;
+      padding-bottom: 15px;
+      border-bottom: 1px dashed #dcdcdc;
+      margin-bottom: 25px;
+    }
+    .invoice-title {
+      background-color: #fbf6f0;
+      border: 1px solid #e2d2c3;
+      text-align: center;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: #1a1d20;
+      border-radius: 4px;
+      margin-bottom: 30px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+    }
+    th {
+      background-color: #1a1d20;
+      color: #ffffff;
+      padding: 12px;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+    }
+    .totals-section {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      border-top: 1px solid #e2d2c3;
+      padding-top: 20px;
+      gap: 10px;
+    }
+    .totals-table {
+      width: 320px;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      font-size: 14px;
+      color: #555;
+      font-weight: 600;
+    }
+    .grand-total {
+      font-size: 18px;
+      color: #b08968;
+      font-weight: 800;
+      border-top: 2px solid #b08968;
+      margin-top: 5px;
+      padding-top: 8px;
+    }
+    .prepayment-box {
+      background-color: #fbf6f0;
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid #e2d2c3;
+      font-size: 15px;
+      font-weight: bold;
+      color: #1a1d20;
+      margin-top: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .banking-info {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 15px;
+      font-size: 12px;
+      color: #555;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px dashed #e2d2c3;
+      font-size: 15px;
+      letter-spacing: 1px;
+      color: #8c7a6b;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .no-print-bar {
+      max-width: 800px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1a1d20;
+      padding: 12px 20px;
+      border-radius: 8px;
+      color: white;
+    }
+    .print-btn {
+      background: #b08968;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    @media print {
+      body { padding: 0; background: white; }
+      .invoice-container { box-shadow: none; padding: 20px; max-width: 100%; }
+      .no-print-bar { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="no-print-bar">
+    <span style="font-weight:600;font-size:14px;">Babi Interior Design · Official Proforma Invoice</span>
+    <button class="print-btn" onclick="window.print()">Print or Save as PDF</button>
+  </div>
+
+  <div class="invoice-container">
+    <div class="header">
+      <div class="brand-section">
+        <div class="logo-img-box">
+          <img src="/assets/aistudio/image_97dc7301.png" alt="Babi Logo" style="width:100%;height:100%;object-fit:contain;" />
+        </div>
+        <div>
+          <div class="brand-name">BABI</div>
+          <div class="brand-tagline">INTERIOR DESIGN</div>
+        </div>
+      </div>
+      <div class="contact-info">
+        <div style="font-weight:bold;color:#1a1d20;">Ambo City, Ethiopia</div>
+        <div style="font-family:monospace;font-weight:bold;color:#1a1d20;">+251 91 985 4883</div>
+        <div style="font-size:11px;color:#059669;font-weight:600;">WhatsApp &amp; Telegram Enabled</div>
+        <div>naolgaremew@gmail.com</div>
+      </div>
+    </div>
+
+    <div class="client-bar">
+      <div>To: <span style="font-weight:bold;color:#1a1d20;">Alsen</span></div>
+      <div>Phone: <span style="font-family:monospace;font-weight:bold;color:#1a1d20;">+251 92 002 3039</span></div>
+      <div>Date: <span style="font-weight:bold;color:#1a1d20;">November 8, 2026</span></div>
+    </div>
+
+    <div class="invoice-title">P R O F O R M A &nbsp; I N V O I C E</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:8%;text-align:center;border-top-left-radius:4px;">#</th>
+          <th style="text-align:left;">Item &amp; Description</th>
+          <th style="text-align:right;">Unit Price</th>
+          <th style="text-align:center;">Qty</th>
+          <th style="width:20%;text-align:right;border-top-right-radius:4px;">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr style="border-bottom:1px solid #eee;">
+          <td style="padding:14px 10px;text-align:center;vertical-align:top;font-weight:600;color:#555;">1</td>
+          <td style="padding:14px;vertical-align:top;">
+            <div style="font-weight:bold;color:#1a1d20;font-size:14px;margin-bottom:4px;">Laminated MDF</div>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">
+              <span style="display:inline-block;background:#f0f2f5;color:#555;font-size:11px;padding:2px 8px;border-radius:4px;">Standard MDF Joinery</span>
+              <span style="display:inline-block;background:#f0f2f5;color:#555;font-size:11px;padding:2px 8px;border-radius:4px;font-family:monospace;">3.54m × 3m</span>
+              
+            </div>
+          </td>
+          <td style="padding:14px;text-align:right;vertical-align:top;font-family:monospace;font-size:14px;color:#2c3e50;">17,000 ETB</td>
+          <td style="padding:14px;text-align:center;vertical-align:top;font-family:monospace;font-size:14px;font-weight:bold;color:#1a1d20;">10.63</td>
+          <td style="padding:14px;text-align:right;vertical-align:top;font-family:monospace;font-size:14px;font-weight:bold;color:#1a1d20;">180,710 ETB</td>
+        </tr>
+      
+        <tr style="border-bottom:1px solid #eee;">
+          <td style="padding:14px 10px;text-align:center;vertical-align:top;font-weight:600;color:#555;">2</td>
+          <td style="padding:14px;vertical-align:top;">
+            <div style="font-weight:bold;color:#1a1d20;font-size:14px;margin-bottom:4px;">Living Room Floating TV Unit</div>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">
+              <span style="display:inline-block;background:#f0f2f5;color:#555;font-size:11px;padding:2px 8px;border-radius:4px;">UV High-Gloss / Super-Matte MDF</span>
+              <span style="display:inline-block;background:#f0f2f5;color:#555;font-size:11px;padding:2px 8px;border-radius:4px;font-family:monospace;">3.7m × 2.25m</span>
+              <span style="display:inline-block;background:#f0f2f5;color:#555;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:4px;">Integrated Warm LED Profile Channels (3000K)</span><span style="display:inline-block;background:#f0f2f5;color:#555;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:4px;">Blum Austria Soft-Close Hardware Upgrade</span>
+            </div>
+          </td>
+          <td style="padding:14px;text-align:right;vertical-align:top;font-family:monospace;font-size:14px;color:#2c3e50;">22,000 ETB</td>
+          <td style="padding:14px;text-align:center;vertical-align:top;font-family:monospace;font-size:14px;font-weight:bold;color:#1a1d20;">8.33</td>
+          <td style="padding:14px;text-align:right;vertical-align:top;font-family:monospace;font-size:14px;font-weight:bold;color:#1a1d20;">199,170 ETB</td>
+        </tr>
+      
+      </tbody>
+    </table>
+
+    <div class="totals-section">
+      <div class="totals-table">
+        <div class="total-row">
+          <span>SUBTOTAL</span>
+          <span style="font-family:monospace;">379,880 ETB</span>
+        </div>
+        
+        <div class="total-row grand-total">
+          <span>TOTAL</span>
+          <span style="font-family:monospace;">379,880 ETB</span>
+        </div>
+        <div class="prepayment-box">
+          <span>50% PREPAYMENT</span>
+          <span style="font-family:monospace;color:#78350f;">189,940 ETB</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="banking-info">
+      <div>
+        <div style="font-weight:bold;color:#1a1d20;margin-bottom:2px;">Bank Transfer Details:</div>
+        <div>Commercial Bank of Ethiopia (CBE): <strong style="font-family:monospace;color:#1a1d20;">1000293847561</strong></div>
+        <div>Telebirr: <strong style="font-family:monospace;color:#1a1d20;">0919854883</strong> (Naol Geremaw · WhatsApp &amp; Telegram)</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-weight:bold;color:#1a1d20;margin-bottom:2px;">Project Execution:</div>
+        <div>Location: <strong>Ambo City</strong> &amp; Regional Workshop</div>
+        <div>Includes 5-Year Workshop Structural Warranty</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Thank you for choosing Babi Interior Design
+    </div>
+  </div>
+</body>
+</html>
