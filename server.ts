@@ -11,11 +11,17 @@ import { checkMongoHealth, getMongoDb } from './server/mongo.ts';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const firebaseConfigRaw = fs.readFileSync(
-  path.resolve(__dirname, 'firebase-applet-config.json'),
-  'utf-8'
-);
-const firebaseConfig = JSON.parse(firebaseConfigRaw) as { projectId?: string };
+let firebaseConfig: { projectId?: string } = { projectId: 'stable-hold-83rp2' };
+try {
+  const localConfig = path.resolve(__dirname, 'firebase-applet-config.json');
+  const rootConfig = path.resolve(process.cwd(), 'firebase-applet-config.json');
+  const configPath = fs.existsSync(localConfig) ? localConfig : rootConfig;
+  if (fs.existsSync(configPath)) {
+    firebaseConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+  }
+} catch {
+  // Use default config
+}
 
 const adminApp = getApps().length
   ? getApp()
@@ -147,11 +153,10 @@ const PUBLIC_CATALOG_ITEMS = [
   },
 ];
 
-async function startServer() {
-  const app = express();
-  app.use(express.json({ limit: '2mb' }));
+export const app = express();
+app.use(express.json({ limit: '2mb' }));
 
-  app.get('/api/health', (_req, res) => {
+app.get('/api/health', (_req, res) => {
     res.json({ ok: true });
   });
 
@@ -540,14 +545,15 @@ async function startServer() {
     }
   });
 
-  if (process.env.NODE_ENV !== 'production') {
+async function startServer() {
+  if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
-  } else {
+  } else if (!process.env.VERCEL) {
     const distDir = path.resolve(__dirname, 'dist');
     app.use(express.static(distDir));
     app.get('*', (_req, res) => {
@@ -555,12 +561,18 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Babi Studio Pro Forma server listening on http://0.0.0.0:${PORT}`);
+  if (!process.env.VERCEL) {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Babi Studio Pro Forma server listening on http://0.0.0.0:${PORT}`);
+    });
+  }
+}
+
+if (!process.env.VERCEL) {
+  startServer().catch((err) => {
+    console.error('Failed to start server:', err);
+    process.exit(1);
   });
 }
 
-startServer().catch((err) => {
-  console.error('Failed to start server:', err);
-  process.exit(1);
-});
+export default app;
