@@ -33,7 +33,7 @@ service cloud.firestore {
     }
 
     function isVerifiedOwner(userId) {
-      return isVerified() && isValidId(userId) && request.auth.uid == userId;
+      return isSignedIn() && isValidId(userId) && request.auth.uid == userId;
     }
 
     function isValidString(val, minLen, maxLen) {

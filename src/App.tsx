@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { onAuthStateChanged, signInWithPopup, signOut, type User } from 'firebase/auth';
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
+  type User,
+} from 'firebase/auth';
 import {
   Check,
   Cloud,
@@ -343,6 +350,49 @@ function WorkspaceApp() {
     }
   };
 
+  const handleSignInWithEmail = async (emailInput: string, passInput: string) => {
+    setAuthError(null);
+    try {
+      await signInWithEmailAndPassword(auth, emailInput.trim(), passInput);
+    } catch (err: unknown) {
+      console.error('Email sign-in error:', err);
+      const code = (err as { code?: string })?.code;
+      if (
+        code === 'auth/invalid-credential' ||
+        code === 'auth/wrong-password' ||
+        code === 'auth/user-not-found' ||
+        code === 'auth/invalid-email'
+      ) {
+        setAuthError('Incorrect email or password. Please verify the credentials and try again.');
+      } else if (code === 'auth/too-many-requests') {
+        setAuthError('Too many failed attempts. Please wait a moment before trying again.');
+      } else {
+        const msg = err instanceof Error ? err.message : 'Unable to sign in with email.';
+        setAuthError(msg);
+      }
+    }
+  };
+
+  const handleSignUpWithEmail = async (emailInput: string, passInput: string) => {
+    setAuthError(null);
+    try {
+      await createUserWithEmailAndPassword(auth, emailInput.trim(), passInput);
+    } catch (err: unknown) {
+      console.error('Email sign-up error:', err);
+      const code = (err as { code?: string })?.code;
+      if (code === 'auth/email-already-in-use') {
+        setAuthError('An account with this email already exists. Please switch to Sign In.');
+      } else if (code === 'auth/weak-password') {
+        setAuthError('Password must be at least 6 characters.');
+      } else if (code === 'auth/invalid-email') {
+        setAuthError('Please enter a valid email address.');
+      } else {
+        const msg = err instanceof Error ? err.message : 'Unable to create account.';
+        setAuthError(msg);
+      }
+    }
+  };
+
   const handleOpenPublicPortalFromSignIn = () => {
     if (typeof window !== 'undefined') {
       window.history.pushState({}, '', '/portal');
@@ -639,6 +689,8 @@ function WorkspaceApp() {
     return (
       <SignInPage
         onSignInWithGoogle={handleSignIn}
+        onSignInWithEmail={handleSignInWithEmail}
+        onSignUpWithEmail={handleSignUpWithEmail}
         onOpenPublicPortal={handleOpenPublicPortalFromSignIn}
         onContinueAsGuest={() => setIsGuestMode(true)}
         authError={authError}
