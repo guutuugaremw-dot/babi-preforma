@@ -117,6 +117,7 @@ function WorkspaceApp() {
 
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
+  const [isGuestMode, setIsGuestMode] = useState(false);
 
   const [activeTab, setActiveTab] = useState<WorkspaceTab>(
     isStandalonePortal ? 'portal' : 'editor'
@@ -236,9 +237,17 @@ function WorkspaceApp() {
           await publishPublicStudioProfile(user.uid, remoteSettings);
           void mongoSaveSettings(user, remoteSettings);
         } else {
-          await saveStudioSettings(user.uid, studioSettings);
-          await publishPublicStudioProfile(user.uid, studioSettings);
-          void mongoSaveSettings(user, studioSettings);
+          const personalizedDefaults = {
+            ...studioSettings,
+            email: user.email || studioSettings.email,
+            brandName: user.displayName
+              ? `${user.displayName.split(' ')[0]}'s Studio`
+              : studioSettings.brandName,
+          };
+          setStudioSettings(personalizedDefaults);
+          await saveStudioSettings(user.uid, personalizedDefaults);
+          await publishPublicStudioProfile(user.uid, personalizedDefaults);
+          void mongoSaveSettings(user, personalizedDefaults);
         }
       })
       .catch((err) => {
@@ -310,9 +319,27 @@ function WorkspaceApp() {
     setAuthError(null);
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Unable to sign in.';
-      setAuthError(msg);
+    } catch (err: unknown) {
+      console.error('Sign-in error:', err);
+      const code = (err as { code?: string })?.code;
+      if (code === 'auth/unauthorized-domain') {
+        const domain =
+          typeof window !== 'undefined' ? window.location.hostname : 'current domain';
+        setAuthError(
+          `Domain "${domain}" is not authorized in Firebase Authentication. In Firebase Console > Authentication > Settings > Authorized Domains, add "${domain}".`
+        );
+      } else if (code === 'auth/popup-blocked') {
+        setAuthError(
+          'The Google sign-in popup was blocked by your browser. Please allow popups for this site and try again.'
+        );
+      } else if (code === 'auth/popup-closed-by-user') {
+        setAuthError(
+          'The sign-in window was closed before completion. Please click "Sign in with Google" again to select your account.'
+        );
+      } else {
+        const msg = err instanceof Error ? err.message : 'Unable to sign in with Google.';
+        setAuthError(msg);
+      }
     }
   };
 
@@ -326,6 +353,7 @@ function WorkspaceApp() {
 
   const handleSignOut = async () => {
     await signOut(auth);
+    setIsGuestMode(false);
     const fresh = createStarterInvoice(DEFAULT_STUDIO_SETTINGS);
     setInvoice(fresh.invoice);
     setItems(fresh.items);
@@ -607,11 +635,12 @@ function WorkspaceApp() {
     );
   }
 
-  if (!isStandalonePortal && !user) {
+  if (!isStandalonePortal && !user && !isGuestMode) {
     return (
       <SignInPage
         onSignInWithGoogle={handleSignIn}
         onOpenPublicPortal={handleOpenPublicPortalFromSignIn}
+        onContinueAsGuest={() => setIsGuestMode(true)}
         authError={authError}
       />
     );

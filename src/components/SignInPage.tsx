@@ -4,12 +4,14 @@ import { ArrowRight, Calculator, FileText, Loader2, Lock, ShieldCheck } from 'lu
 interface SignInPageProps {
   onSignInWithGoogle: () => Promise<void>;
   onOpenPublicPortal: () => void;
+  onContinueAsGuest?: () => void;
   authError: string | null;
 }
 
 export function SignInPage({
   onSignInWithGoogle,
   onOpenPublicPortal,
+  onContinueAsGuest,
   authError,
 }: SignInPageProps) {
   const [logoError, setLogoError] = useState(false);
@@ -109,9 +111,19 @@ export function SignInPage({
               )}
             </button>
 
-            <p className="text-[11px] text-center text-slate-400">
-              Verified Google Authentication powered by Firebase
+            <p className="text-[11px] text-center text-slate-500">
+              Select any personal or work Google/Gmail account
             </p>
+
+            {onContinueAsGuest && (
+              <button
+                type="button"
+                onClick={onContinueAsGuest}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+              >
+                <span>Continue as Guest (Work Offline)</span>
+              </button>
+            )}
           </div>
 
           {/* Public Client Portal Escape Link */}
